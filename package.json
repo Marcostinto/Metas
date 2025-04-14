@@ -1,0 +1,336 @@
+import React, { useState } from 'react';
+import { LineChart, BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart } from 'recharts';
+
+function App() {
+  const [activeTab, setActiveTab] = useState('faturamento');
+
+  // Dados de Faturamento das Lojas
+  const dadosFaturamento = [
+    {loja: 'Loja 5', valor2024: 130000, valor2025: 131000, meta2025: 130000, atingiuMeta: true, variacao: 0.8},
+    {loja: 'Loja 7', valor2024: 135000, valor2025: 158000, meta2025: 160000, atingiuMeta: false, variacao: 17.0},
+    {loja: 'Loja 8', valor2024: 140000, valor2025: 165000, meta2025: 160000, atingiuMeta: true, variacao: 17.9},
+    {loja: 'Loja 12', valor2024: 145000, valor2025: 120000, meta2025: 150000, atingiuMeta: false, variacao: -17.2},
+    {loja: 'Loja 17', valor2024: 155000, valor2025: 110000, meta2025: 130000, atingiuMeta: false, variacao: -29.0},
+    {loja: 'Loja 19', valor2024: 120000, valor2025: 150000, meta2025: 161000, atingiuMeta: false, variacao: 25.0},
+  ];
+
+  // Dados de SKU por Loja
+  const dadosSKU = [
+    {loja: 'Loja 5', valor2024: 2.5, valor2025: 2.8, variacao: 12.0},
+    {loja: 'Loja 7', valor2024: 2.2, valor2025: 2.9, variacao: 31.8},
+    {loja: 'Loja 8', valor2024: 2.1, valor2025: 2.7, variacao: 28.6},
+  ];
+
+  // Dados de Litragem
+  const dadosLitragem = [
+    {loja: 'Loja 5', valor2024: 110, valor2025: 118, variacao: 7.3},
+    {loja: 'Loja 7', valor2024: 150, valor2025: 119, variacao: -20.7},
+  ];
+
+  // Dados de Rotatividade das Equipes
+  const dadosRotatividade = [
+    {loja: 'Loja 17', valor2024: 190, valor2025: 198, variacao: 4.2},
+    {loja: 'Loja 19', valor2024: 110, valor2025: 130, variacao: 18.2},
+  ];
+
+  // Resumo de performance por indicador
+  const dadosPerformance = [
+    {indicador: 'Faturamento', valor2024: 825000, valor2025: 834000, meta2025: 891000, variacao: 1.1},
+    {indicador: 'SKU Médio', valor2024: 2.3, valor2025: 2.8, meta2025: 3.0, variacao: 21.7},
+    {indicador: 'Litragem', valor2024: 130, valor2025: 118.5, meta2025: 125, variacao: -8.8},
+    {indicador: 'Rotatividade', valor2024: 150, valor2025: 164, meta2025: 140, variacao: 9.3},
+  ];
+
+  // Calculando KPIs importantes
+  const metasAtingidas = dadosFaturamento.filter(item => item.atingiuMeta).length;
+  const totalMetas = dadosFaturamento.length;
+  const percentualMetas = (metasAtingidas / totalMetas) * 100;
+
+  // Dados para gráfico de pizza de cumprimento de metas
+  const dadosPizza = [
+    { name: 'Atingiram Meta', value: metasAtingidas },
+    { name: 'Não Atingiram', value: totalMetas - metasAtingidas },
+  ];
+  const COLORS = ['#0088FE', '#FF8042'];
+
+  const formatCurrency = (value) => {
+    if (value > 10000) {
+      return `R$ ${(value/1000).toFixed(0)}k`;
+    }
+    return `R$ ${value.toLocaleString('pt-BR')}`;
+  };
+
+  const renderTabContent = () => {
+    switch(activeTab) {
+      case 'faturamento':
+        return (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Faturamento por Loja - Comparativo 2024/2025</h3>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={dadosFaturamento}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="loja" />
+                  <YAxis tickFormatter={(value) => `${(value/1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, '']} />
+                  <Legend />
+                  <Bar dataKey="valor2024" name="2024" fill="#8884d8" />
+                  <Bar dataKey="valor2025" name="2025" fill="#82ca9d" />
+                  <Line dataKey="meta2025" name="Meta 2025" stroke="#ff7300" strokeWidth={2} dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium mb-2">Percentual de Lojas que Atingiram a Meta</h4>
+                <div className="h-40">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={dadosPizza}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={60}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {dadosPizza.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [value, '']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium mb-2">Variação % do Faturamento (2024-2025)</h4>
+                <div className="h-40">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dadosFaturamento}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="loja" tick={{fontSize: 10}} />
+                      <YAxis tickFormatter={(value) => `${value}%`} />
+                      <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Variação']} />
+                      <Bar dataKey="variacao" name="Variação %" fill="#82ca9d">
+                        {dadosFaturamento.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.variacao >= 0 ? '#82ca9d' : '#ff8042'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'sku':
+        return (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Evolução de SKU por Loja - 2024 vs 2025</h3>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dadosSKU}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="loja" />
+                  <YAxis domain={[0, 4]} />
+                  <Tooltip formatter={(value) => [value, '']} />
+                  <Legend />
+                  <Bar dataKey="valor2024" name="2024" fill="#8884d8" />
+                  <Bar dataKey="valor2025" name="2025" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg mt-4">
+              <h4 className="text-sm font-medium mb-2">Variação % de SKU (2024-2025)</h4>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dadosSKU}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="loja" />
+                    <YAxis tickFormatter={(value) => `${value}%`} />
+                    <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Variação']} />
+                    <Bar dataKey="variacao" name="Variação %" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        );
+      case 'litragem':
+        return (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Evolução de Litragem por Loja - 2024 vs 2025</h3>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dadosLitragem}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="loja" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [value, '']} />
+                  <Legend />
+                  <Bar dataKey="valor2024" name="2024" fill="#8884d8" />
+                  <Bar dataKey="valor2025" name="2025" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="bg-indigo-50 p-4 rounded-lg mt-4">
+              <h4 className="text-sm font-medium mb-2">Variação % de Litragem (2024-2025)</h4>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dadosLitragem}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="loja" />
+                    <YAxis tickFormatter={(value) => `${value}%`} />
+                    <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Variação']} />
+                    <Bar dataKey="variacao" name="Variação %" fill="#8884d8">
+                      {dadosLitragem.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.variacao >= 0 ? '#82ca9d' : '#ff8042'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        );
+      case 'rotatividade':
+        return (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Rotatividade das Equipes - 2024 vs 2025</h3>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dadosRotatividade}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="loja" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [value, '']} />
+                  <Legend />
+                  <Bar dataKey="valor2024" name="2024" fill="#8884d8" />
+                  <Bar dataKey="valor2025" name="2025" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg mt-4">
+              <h4 className="text-sm font-medium mb-2">Variação % de Rotatividade (2024-2025)</h4>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dadosRotatividade}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="loja" />
+                    <YAxis tickFormatter={(value) => `${value}%`} />
+                    <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Variação']} />
+                    <Bar dataKey="variacao" name="Variação %" fill="#ff8042" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        );
+      case 'resumo':
+      default:
+        return (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Resumo Geral de Performance</h3>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={dadosPerformance}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="indicador" />
+                  <YAxis yAxisId="left" orientation="left" />
+                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="valor2024" name="2024" fill="#8884d8" />
+                  <Bar yAxisId="left" dataKey="valor2025" name="2025" fill="#82ca9d" />
+                  <Line yAxisId="right" dataKey="variacao" name="Variação %" stroke="#ff7300" strokeWidth={2} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-4 gap-4 mt-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium">Faturamento</h4>
+                <p className="text-xl font-bold">{formatCurrency(dadosPerformance[0].valor2025)}</p>
+                <p className={`text-sm ${dadosPerformance[0].variacao >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {dadosPerformance[0].variacao >= 0 ? '↑' : '↓'} {dadosPerformance[0].variacao.toFixed(1)}%
+                </p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium">SKU Médio</h4>
+                <p className="text-xl font-bold">{dadosPerformance[1].valor2025.toFixed(1)}</p>
+                <p className={`text-sm ${dadosPerformance[1].variacao >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {dadosPerformance[1].variacao >= 0 ? '↑' : '↓'} {dadosPerformance[1].variacao.toFixed(1)}%
+                </p>
+              </div>
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium">Litragem</h4>
+                <p className="text-xl font-bold">{dadosPerformance[2].valor2025.toFixed(1)}</p>
+                <p className={`text-sm ${dadosPerformance[2].variacao >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {dadosPerformance[2].variacao >= 0 ? '↑' : '↓'} {Math.abs(dadosPerformance[2].variacao).toFixed(1)}%
+                </p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium">Rotatividade</h4>
+                <p className="text-xl font-bold">{dadosPerformance[3].valor2025.toFixed(0)}</p>
+                <p className={`text-sm ${dadosPerformance[3].variacao <= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {dadosPerformance[3].variacao >= 0 ? '↑' : '↓'} {dadosPerformance[3].variacao.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-800">Dashboard de Metas e Resultados</h2>
+        <div className="text-sm text-gray-500">Atualizado em: Abril 2025</div>
+      </div>
+      
+      <div className="bg-gray-100 rounded-lg p-1 flex mb-6">
+        <button 
+          className={`px-4 py-2 rounded-lg ${activeTab === 'resumo' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'} flex-1 text-center text-sm font-medium`}
+          onClick={() => setActiveTab('resumo')}
+        >
+          Resumo Geral
+        </button>
+        <button 
+          className={`px-4 py-2 rounded-lg ${activeTab === 'faturamento' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'} flex-1 text-center text-sm font-medium`}
+          onClick={() => setActiveTab('faturamento')}
+        >
+          Faturamento
+        </button>
+        <button 
+          className={`px-4 py-2 rounded-lg ${activeTab === 'sku' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'} flex-1 text-center text-sm font-medium`}
+          onClick={() => setActiveTab('sku')}
+        >
+          SKU
+        </button>
+        <button 
+          className={`px-4 py-2 rounded-lg ${activeTab === 'litragem' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'} flex-1 text-center text-sm font-medium`}
+          onClick={() => setActiveTab('litragem')}
+        >
+          Litragem
+        </button>
+        <button 
+          className={`px-4 py-2 rounded-lg ${activeTab === 'rotatividade' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'} flex-1 text-center text-sm font-medium`}
+          onClick={() => setActiveTab('rotatividade')}
+        >
+          Rotatividade
+        </button>
+      </div>
+      
+      {renderTabContent()}
+      
+      <div className="mt-6 text-xs text-gray-500 text-center">
+        Dados extraídos do arquivo "Modelo metas.xlsx" | Apresentação para Diretoria
+      </div>
+    </div>
+  );
+}
+
+export default App;
